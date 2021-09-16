@@ -58,6 +58,10 @@ fn find_openssl(target: &str) -> (PathBuf, PathBuf) {
 fn main() {
     check_rustc_versions();
 
+    if env("OPENSSL_NO_LINK").map_or(false, |s| s != "0") {
+        return;
+    }
+
     let target = env::var("TARGET").unwrap();
 
     let (lib_dir, include_dir) = find_openssl(&target);
