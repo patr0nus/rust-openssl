@@ -58,7 +58,20 @@ fn find_openssl(target: &str) -> (PathBuf, PathBuf) {
 fn main() {
     check_rustc_versions();
 
-    if env("OPENSSL_NO_LINK").map_or(false, |s| s != "0") {
+    if let Some(version) = env("OPENSSL_NO_LINK_VERSION").as_ref().and_then(|s| s.to_str()) {
+        let version_cfgs = if let Some(libressl_version_str) = version.strip_prefix("libressl-") {
+            let libressl_version = parse_new_version(libressl_version_str);
+            println!("cargo:libressl_version_number={:x}", libressl_version);
+            cfgs::get(None, Some(libressl_version))
+        }
+        else {
+            let openssl_version = parse_new_version(version);
+            println!("cargo:version_number={:x}", openssl_version);
+            cfgs::get(Some(openssl_version), None)
+        };
+        for cfg in version_cfgs {
+            println!("cargo:rustc-cfg={}", cfg);
+        }
         return;
     }
 
